@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1">
+	<title>Simon Strolls — Keep Talking and Nobody Explodes Module</title>
+	<link rel="stylesheet" type="text/css" href="css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<link rel="stylesheet" type="text/css" href="css/font.css">
+	<script src="js/ktane-utils.js"></script>
+	<script src="js/ruleseed.js"></script>
+
+	<script>
+		function setDefaultRules(rnd) {
+			setRules(rnd);
+		}
+
+		function levenshtein(a, b) {
+			let lengthA = a.length;
+			let lengthB = b.length;
+			let distances = {};
+			for (let i = 0; i <= lengthA; distances[`${i},0`] = i++);
+			for (let j = 0; j <= lengthB; distances[`0,${j}`] = j++);
+
+			for (let i = 1; i <= lengthA; i++)
+				for (let j = 1; j < lengthB; j++)
+					distances[`${i},${j}`] = Math.min(Math.min(distances[`${i - 1},${j}`] + 1, distances[`${i},${j - 1}`] + 1), distances[`${i - 1},${j - 1}`] + (b[j - 1] == a[i - 1] ? 0 : 1));
+			return distances[`${lengthA},${lengthB}`];
+		}
+
+		function similarity(a, b) {
+			var score = levenshtein(a, b);
+			for (let i = 1; i < a.length; i++)
+				score = Math.min(score, levenshtein(a.substr(i) + a.substr(0, i), b));
+			return score;
+		}
+
+		function removeWalls(m1, m2) {
+			if (m1.x - m2.x == 1) {
+				m1.wallLeft = false;
+				m2.wallRight = false;
+			}
+			if (m1.x - m2.x == -1) {
+				m1.wallRight = false;
+				m2.wallLeft = false;
+			}
+			if (m1.y - m2.y == 1) {
+				m1.wallUp = false;
+				m2.wallDown = false;
+			}
+			if (m1.y - m2.y == -1) {
+				m1.wallDown = false;
+				m2.wallUp = false;
+			}
+		}
+		
+		
+		
+		class Maze {
+			constructor() {
+				this.CellGrid = new Array(5);
+				for (let i = 0; i < 5; i++) {
+					this.CellGrid[i] = new Array(5);
+					for (let j = 0; j < 5; j++)
+						this.CellGrid[i][j] = { x: i, y: j, visited: false, wallUp: true, wallDown: true, wallLeft: true, wallRight: true };
+				}
+			}
+			BuildMaze(rnd) {
+				for (let i = 0; i < 5; i++) {
+					for (let j = 0; j < 5; j++) {
+						if (i > 0) rnd.next();
+						if (j > 0) rnd.next();
+					}
+				}
+				this.PopulateMaze(rnd);
+			}
+			PopulateMaze(rnd) {
+				var x = rnd.next(0, 5);
+				var y = rnd.next(0, 5);
+				this.VisitCell(this.CellGrid[x][y], [], rnd);
+			}
+			VisitCell(cell, cellStack, rnd) {
+				while (cell !== null) {
+					cell.visited = true;
+					let mazeCell = this.GetNextNeighbor(cell, rnd);
+					if (mazeCell !== null) {
+						removeWalls(cell, mazeCell);
+						cellStack.push(cell);
+					}
+					else if (cellStack.length > 0)
+						mazeCell = cellStack.pop();
+					cell = mazeCell;
+				}
+			}
+			GetNextNeighbor(cell, rnd) {
+				var list = [];
+				if (cell.x > 0 && !this.CellGrid[cell.x - 1][cell.y].visited) list.push(this.CellGrid[cell.x - 1][cell.y]);
+				if (cell.x < 4 && !this.CellGrid[cell.x + 1][cell.y].visited) list.push(this.CellGrid[cell.x + 1][cell.y]);
+				if (cell.y > 0 && !this.CellGrid[cell.x][cell.y - 1].visited) list.push(this.CellGrid[cell.x][cell.y - 1]);
+				if (cell.y < 4 && !this.CellGrid[cell.x][cell.y + 1].visited) list.push(this.CellGrid[cell.x][cell.y + 1]);
+				return list.length > 0 ? list[rnd.next(0, list.length)] : null;
+			}
+			ToSVG(color1, color2, color3, color4) {
+				var colors = ['#e55', '#5c7', '#58e', '#eb4'];
+				var svg = '';
+				svg += `<rect x='100' y='100' width='50' height='50' fill='#ccc' />`;
+				svg += `<path d="M 0 0 v0 L 25 -25 L 225 -25 L 250 0 z" fill="${colors[color1]}"/>`;
+				svg += `<path d="M 250 50 v-50 L 275 25 L 275 225 L 250 250 z" fill="${colors[color2]}"/>`;
+				svg += `<path d="M 0 250 v0 L 25 275 L 225 275 L 250 250 z" fill="${colors[color3]}"/>`;
+				svg += `<path d="M 0 50 v-50 L -25 25 L -25 225 L 0 250 z" fill="${colors[color4]}"/>`;
+				for (let i = 0; i < 5; i++) {
+					for (let j = 0; j < 5; j++) {
+						var mazeCell = this.CellGrid[i][j];
+						var x = i * 50;
+						var y = j * 50;
+						svg += `<circle cx='${x + 25}' cy='${y + 25}' r='3' fill='black' />`;
+						if (mazeCell.wallUp)
+							svg += `<line x1='${x}' y1='${y}' x2='${x + 50}' y2='${y}' stroke-width='3' stroke='black' fill='none' />`;
+						if (mazeCell.wallLeft)
+							svg += `<line x1='${x}' y1='${y}' x2='${x}' y2='${y + 50}' stroke-width='3' stroke='black' fill='none' />`;
+						if (i === 4)
+							svg += `<line x1='${x + 50}' y1='${y}' x2='${x + 50}' y2='${y + 50}' stroke-width='3' stroke='black' fill='none' />`;
+						if (j === 4)
+							svg += `<line x1='${x}' y1='${y + 50}' x2='${x + 50}' y2='${y + 50}' stroke-width='3' stroke='black' fill='none' />`;
+					}
+				}
+				return `<svg viewBox='-30 -30 310 310' stroke-linecap="square">${svg}</svg>`;
+			}
+		}
+
+		function setRules(rnd) {
+			rnd.next(0, 2);
+			rnd.next(0, 2);
+			let Mazes = [];
+			let colorSet = [0, 1, 2, 3, 0, 1, 3, 2, 0, 2, 1, 3, 0, 2, 3, 1, 0, 3, 1, 2, 0, 3, 2, 1];
+			for (let i = 0; i < 6; i++) {
+				let maze = new Maze();
+				maze.BuildMaze(rnd);
+				Mazes.push(maze);
+			}
+			for (let i = 0; i < 6; i++)
+				document.getElementById('simon-strolls-maze-' + i).innerHTML = Mazes[i].ToSVG(colorSet[i*4], colorSet[(i*4)+1], colorSet[(i*4)+2], colorSet[(i*4)+3] );
+		}
+	</script>
+	<style>
+		.simon-strolls-maze {
+			width: 18em;
+			height: 18em;
+		}
+		.simon-strolls-maze {
+			text-align: center;
+		}
+		.wool {
+			width: 1cm;
+			height: 1cm;
+			margin-bottom: 0.2cm;
+		}
+
+		.simon-strolls-maze-table {
+			text-align: center;
+			margin: auto;
+		}
+
+		.color-name {
+			font-size: 13pt;
+			font-weight: bold;
+			margin-left: 0.3cm;
+		}
+	</style>
+</head>
+<body>
+	<div class="section">
+		<div class="page page-bg-01">
+			<div class="page-header">
+				<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+				<span class="page-header-section-title">Simon Strolls</span>
+			</div>
+			<div class="page-content">
+				<img src="img/NotTheScrew.svg" class="diagram">
+				<h2>On the Subject of Simon Strolls</h2>
+				<p class="flavour-text">Don't... screw up...?</p>
+				
+			</div>
+			<div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Strolls</span>
+            </div>
+            <div class="page-content">
+				<table style="border: none" class="simon-strolls-maze-table">
+					<tr>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-0"></div></td>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-1"></div></td>
+					</tr
+					<tr>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-2"></div></td>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-3"></div></td>
+					</tr>
+					<tr>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-4"></div></td>
+						<td><div class="simon-strolls-maze" id="simon-strolls-maze-5"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="page-footer relative-footer">Page 2 of 2</div>
+		</div>
+	</div>
+</body>
+</html>

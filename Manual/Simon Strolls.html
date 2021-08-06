@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1">
+	<title>Simon Strolls — Keep Talking and Nobody Explodes Module</title>
+	<link rel="stylesheet" type="text/css" href="css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<link rel="stylesheet" type="text/css" href="css/font.css">
+	<script src="js/ktane-utils.js"></script>
+	<script src="js/ruleseed.js"></script>
+
+	<script>
+		function setDefaultRules(rnd) {
+			setRules(rnd);
+		}
+
+		function setRules(rnd) {
+			let mazes = [];
+
+			for (let i = 0; i < 6; i++)
+			{
+				let horizWalls = Array.from(Array(20).keys()).map(x => "1");
+				let vertWalls = Array.from(Array(20).keys()).map(x => "1");
+
+				let todo = Array.from(Array(25).keys());
+				let visited = [];
+
+				let startingSquare = rnd.next(0, 25);
+				visited.push(startingSquare);
+				todo.splice(startingSquare, 1);
+
+				while (todo.length > 0)
+				{
+					let randomSquareIx = rnd.next(0, visited.length);
+					let square = visited[randomSquareIx];
+					let validNeighbors = [];
+					if (square % 5 != 0 && todo.includes(square - 1))
+						validNeighbors.push(square - 1);
+					if (square % 5 != 4 && todo.includes(square + 1))
+						validNeighbors.push(square + 1);
+					if (((square / 5) | 0) != 0 && todo.includes(square - 5))
+						validNeighbors.push(square - 5);
+					if (((square / 5) | 0) != 4 && todo.includes(square + 5))
+						validNeighbors.push(square + 5);
+					if (validNeighbors.length === 0)
+					{
+						visited.splice(randomSquareIx, 1);
+						continue;
+					}
+
+					let neighborIx = rnd.next(0, validNeighbors.length);
+					let neighbor = validNeighbors[neighborIx];
+					if (square % 5 === neighbor % 5)
+						horizWalls[square % 5 + 5 * Math.min(((square / 5) | 0), ((neighbor / 5) | 0))] = "0";
+					else
+						vertWalls[((square / 5) | 0) + 5 * Math.min(square % 5, neighbor % 5)] = "0";
+					visited.push(neighbor);
+					todo.splice(todo.indexOf(neighbor), 1);
+				}
+
+				mazes.push({
+                    h: horizWalls.join(''),
+                    v: vertWalls.join(''),
+                });
+			}
+			console.log(mazes);
+			setMazes(mazes);
+		}
+
+		function setMazes(mazes)
+		{
+			let mazeTds = document.getElementsByClassName('ss-maze');
+			let colorSet = [0, 1, 2, 3, 0, 1, 3, 2, 0, 2, 1, 3, 0, 2, 3, 1, 0, 3, 1, 2, 0, 3, 2, 1];
+			for (let maze = 0; maze < 6; maze++)
+			{
+				mazeTds[maze].innerHTML = create2DMazeSvg(mazes[maze].h, mazes[maze].v, colorSet[maze*4], colorSet[(maze*4)+1], colorSet[(maze*4)+2], colorSet[(maze*4)+3]);
+			}
+		}
+
+		function create2DMazeSvg(hWalls, vWalls, color1, color2, color3, color4) {
+			let xSize = 5;
+			let ySize = 5;
+
+			function n(x, y) {
+			return y % ySize == 0 ? true : hWalls.substr((x + xSize) % xSize + 5 * ((ySize - 1 - y + ySize) % ySize), 1) === '1';
+			}
+            function w(x, y) {
+			return x % xSize == 0 ? true : vWalls.substr((ySize - 1 - y + ySize) % ySize + 5 * ((x + xSize - 1) % xSize), 1) === '1';
+			}
+
+			function isOn(x, y)
+			{
+				return (x % 2 == 0)
+                    ? (y % 2 == 0)
+                        ? (x != 0 && n((x >> 1) - 1, y >> 1)) || (x != xSize * 2 && n(x >> 1, y >> 1)) || (y != 0 && w(x >> 1, (y >> 1) - 1)) || (y != ySize * 2 && w(x >> 1, y >> 1))
+                        : w(x >> 1, y >> 1)
+                    : (y % 2 == 0)
+                        ? n(x >> 1, y >> 1)
+                        : false;
+			}
+
+			function getX(gridX) { return (gridX >> 1) * 50 + (gridX % 2) * 5; }
+			function getY(gridY) { return (gridY >> 1) * 50 + (gridY % 2) * 5; }
+			function getCoord(p) { return `${getX(p.X)},${getY(p.Y)}`; }
+			
+			let colors = ['#e55', '#5c7', '#58e', '#eb4'];
+			
+			return `<svg viewBox='-20 -20 ${60 * xSize} ${60 * ySize}' class='tmaze'>${
+                // Polygons
+				`<rect x='103' y='103' width='48' height='48' fill='#ccc'/>` + 
+				`<circle cx='27.5' cy='27.5' r='3' fill='black' />` +
+				`<circle cx='77.5' cy='27.5' r='3' fill='black' />` +
+				`<circle cx='127.5' cy='27.5' r='3' fill='black' />` +
+				`<circle cx='177.5' cy='27.5' r='3' fill='black' />` +
+				`<circle cx='227.5' cy='27.5' r='3' fill='black' />` +
+				
+				`<circle cx='27.5' cy='77.5' r='3' fill='black' />` +
+				`<circle cx='77.5' cy='77.5' r='3' fill='black' />` +
+				`<circle cx='127.5' cy='77.5' r='3' fill='black' />` +
+				`<circle cx='177.5' cy='77.5' r='3' fill='black' />` +
+				`<circle cx='227.5' cy='77.5' r='3' fill='black' />` +
+				
+				`<circle cx='27.5' cy='127.5' r='3' fill='black' />` +
+				`<circle cx='77.5' cy='127.5' r='3' fill='black' />` +
+				`<circle cx='127.5' cy='127.5' r='3' fill='black' />` +
+				`<circle cx='177.5' cy='127.5' r='3' fill='black' />` +
+				`<circle cx='227.5' cy='127.5' r='3' fill='black' />` +
+				
+				`<circle cx='27.5' cy='177.5' r='3' fill='black' />` +
+				`<circle cx='77.5' cy='177.5' r='3' fill='black' />` +
+				`<circle cx='127.5' cy='177.5' r='3' fill='black' />` +
+				`<circle cx='177.5' cy='177.5' r='3' fill='black' />` +
+				`<circle cx='227.5' cy='177.5' r='3' fill='black' />` +
+				
+				`<circle cx='27.5' cy='227.5' r='3' fill='black' />` +
+				`<circle cx='77.5' cy='227.5' r='3' fill='black' />` +
+				`<circle cx='127.5' cy='227.5' r='3' fill='black' />` +
+				`<circle cx='177.5' cy='227.5' r='3' fill='black' />` +
+				`<circle cx='227.5' cy='227.5' r='3' fill='black' />` +
+				
+				
+				`<path d="M 0 0 v0 L 20 -20 L 235 -20 L 255 0 z" fill="${colors[color1]}"/>` +
+				`<path d="M 0 0 v0 L -20 20 L -20 235 L 0 255 z" fill="${colors[color2]}"/>` +
+				`<path d="M 255 0 v0 L 275 20 L 275 235 L 255 255 z" fill="${colors[color3]}"/>` +
+				`<path d="M 0 255 v0 L 20 275 L 235 275 L 255 255 z" fill="${colors[color4]}"/>` +
+                `<path d='${BoolsToPaths([...Array(2 * xSize + 1).keys()].map(x => [...Array(2 * ySize + 1).keys()].map(y => isOn(x, y)))).map(poly => poly.map((p, ix) => (ix === 0 ? "M" : ix === 1 ? "L" : "") + getCoord(p)).join(" ") + "z").join(" ")}' />`
+            }</svg>`;
+		}
+
+		function BoolsToPaths(input)
+        {
+            let width = input.length;
+            let height = input[0].length;
+
+            let results = [];
+            let visitedUpArrow = [...Array(width).keys()].map(col => [...Array(height).keys()].map(row => false));
+
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                    // every region must have at least one up arrow (left edge)
+                    if (!visitedUpArrow[i][j] && get(input, i, j) && !get(input, i - 1, j))
+                        results.push(tracePolygon(input, i, j, visitedUpArrow));
+
+            return results;
+        }
+
+		function get(arr, i, j)
+        {
+            return i < 0 || i >= arr.length ? false :
+                j < 0 || j >= arr[i].length ? false : arr[i][j];
+        }
+
+		let Up = 0, Down = 1, Left = 2, Right = 3;
+
+        function tracePolygon(input, i, j, visitedUpArrow)
+        {
+            let result = [];
+            let dir = Up;
+
+            while (true)
+            {
+                // In each iteration of this loop, we move from the current edge to the next one.
+                // We have to prioritise right-turns so that the diagonal-adjacent case is handled correctly.
+                // Every time we take a 90° turn, we add the corner coordinate to the result list.
+                // When we get back to the original edge, the polygon is complete.
+                switch (dir)
+                {
+                    case Up:
+                        // If we’re back at the beginning, we’re done with this polygon
+                        if (visitedUpArrow[i][j])
+                            return result;
+
+                        visitedUpArrow[i][j] = true;
+
+                        if (!get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        else if (get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else
+                            j--;
+                        break;
+
+                    case Down:
+                        j++;
+                        if (!get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else if (get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        break;
+
+                    case Left:
+                        if (!get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        else if (get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else
+                            i--;
+                        break;
+
+                    case Right:
+                        i++;
+                        if (!get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else if (get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        break;
+                }
+            }
+        }
+	</script>
+	<style>
+		.simon-strolls-maze {
+			text-align: center;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+        .ss-maze svg {
+            width: 50mm;
+            display: block;
+        }
+		.ss-maze {
+			width: 10em;
+			height: 10em;
+			border: none;
+		}
+	</style>
+</head>
+<body>
+	<div class="section">
+		<div class="page page-bg-01">
+			<div class="page-header">
+				<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+				<span class="page-header-section-title">Simon Strolls</span>
+			</div>
+			<div class="page-content">
+				<img src="img/NotTheScrew.svg" class="diagram">
+				<h2>On the Subject of Simon Strolls</h2>
+				<p class="flavour-text">Don't... screw up...?</p>
+				<ul>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+				</ul>
+				<table style="border: none" class="simon-strolls-maze">
+					<tr>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+					</tr>
+					<tr>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+						<td class="ss-maze"><svg class="tmaze"></svg></td>
+					</tr>
+				</table>
+			</div>
+			<div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+	</div>
+</body>
+</html>
