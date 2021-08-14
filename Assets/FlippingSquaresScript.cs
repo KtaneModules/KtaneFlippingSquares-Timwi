@@ -4,16 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using Rnd = UnityEngine.Random;
 using KModkit;
+
+using Rnd = UnityEngine.Random;
 
 public class FlippingSquaresScript : MonoBehaviour
 {
-
-    private static int _moduleIdCounter = 1;
-    private int _moduleId;
-    private bool _moduleSolved;
-
     public KMBombInfo Info;
     public KMBombModule Module;
     public KMAudio Audio;
@@ -22,152 +18,288 @@ public class FlippingSquaresScript : MonoBehaviour
     public GameObject[] ButtonObjects;
     public GameObject OuterFlip;
     public GameObject InnerFlip;
-
     public MeshRenderer[] ButtonFronts;
     public MeshRenderer[] ButtonBacks;
+    public KMSelectable[] SquareSelectables;
 
-    public GameObject[] selectionObjs;
-    public GameObject posLocator;
+    public Color[] Colors = new Color[9];
 
-    public Color[] colors = new Color[9];
+    private static int _moduleIdCounter = 1;
+    private int _moduleId;
+    private bool _moduleSolved;
+    private FlipInfo[] _flips;
+    private GameState _gameState;
 
-    public KMSelectable[] squareSelectables;
+    private static readonly FlipInfo[] _allFlips = FlipInfo.GetAll();
+    private readonly Queue<IEnumerator> _animationQueue = new Queue<IEnumerator>();
 
-    private bool isFlipping = false;
-    private List<int> chosenSquares = new List<int>();
+    private struct Coord
+    {
+        public int Value;
+        public int Width;
+        public int X { get { return Value % Width; } }
+        public int Y { get { return Value / Width; } }
+        public Coord(int width, int value) { Value = value; Width = width; }
+        public Coord(int width, int x, int y) { Value = x + width * y; Width = width; }
 
-    private float[] xPos = { -0.045f, 0f, 0.045f };
-    private float[] zPos = { 0.045f, 0f, -0.045f };
-    private float[] twoWideCols = { -0.0225f, 0.0225f };
-    private float[] twoWideRows = { 0.0225f, -0.0225f };
+        public override string ToString()
+        {
+            return string.Format("{2}=({0}, {1})", X, Y, Value);
+        }
+    }
 
-    private float flipXPos;
-    private float flipZPos;
-    private bool validFlip = true;
+    private struct GameState
+    {
+        // Null means it’s the status light
+        public int?[] TopArrows { get; private set; }
+        public int?[] BottomArrows { get; private set; }
+        public GameState(int?[] topArrows, int?[] bottomArrows)
+        {
+            TopArrows = topArrows;
+            BottomArrows = bottomArrows;
+        }
 
-    private int[] squareColors = new int[9];
-    private int[] squareArrows = new int[9];
-    private bool[] squareFlippedDown = new bool[9];
+        public GameState PerformFlip(FlipInfo flip)
+        {
+            var top = TopArrows.ToArray();
+            var bottom = BottomArrows.ToArray();
+
+            foreach (var sq in flip.Squares)
+            {
+                var nc = flip.TranslateSquare(sq);
+                top[nc.Value] = flip.TranslateArrow(BottomArrows[sq.Value]);
+                bottom[nc.Value] = flip.TranslateArrow(TopArrows[sq.Value]);
+            }
+
+            return new GameState(top, bottom);
+        }
+    }
+
+    private struct FlipInfo
+    {
+        public FlipDirection Direction { get; private set; }
+        public Coord[] Squares { get; private set; }
+        public Coord Center { get; private set; }
+        private FlipInfo(FlipDirection direction, Coord[] squares, Coord center)
+        {
+            Direction = direction;
+            Squares = squares;
+            Center = center;
+        }
+
+        public static FlipInfo? Generate(FlipDirection direction, Coord[] squares)
+        {
+            // Centers are on a 5×5 grid; 0/2/4 are on the buttons, 1/3 are between them
+            var center =
+                /* 1 */
+                CenterFrom(squares, "", 0, 0) ??
+                /* 2 */
+                CenterFromOrthogonal(direction, squares, "→", 1, 0) ??
+                CenterFromOrthogonal(direction, squares, "↓", 0, 1) ??
+                CenterFromDiagonal(direction, squares, "↘", 1, 1) ??
+                CenterFromDiagonal(direction, squares, "↙", -1, 1) ??
+
+                /* 3 */
+                CenterFromOrthogonal(direction, squares, "→→", 2, 0) ??
+                CenterFromOrthogonal(direction, squares, "↓↓", 0, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→↙", 1, 1) ??
+                CenterFromBackwardDiagonal(direction, squares, "→↓", 1, 1) ??
+                CenterFromBackwardDiagonal(direction, squares, "↓→", 1, 1) ??
+                CenterFromForwardDiagonal(direction, squares, "↙→", -1, 1) ??
+
+                /* 4 */
+                CenterFrom(squares, "→↙→", 1, 1) ??
+
+                /* 6 */
+                CenterFromOrthogonal(direction, squares, "↓↗↓↗↓", 2, 1) ??
+                CenterFromOrthogonal(direction, squares, "→↙→↙→", 1, 2) ??
+                null;
+            if (center == null)
+                return null;
+            return new FlipInfo(direction, squares, center.Value);
+        }
+
+        // Flipping like this: ↕ or ↔
+        private static Coord? CenterFromOrthogonal(FlipDirection direction, Coord[] squares, string repr, int relX, int relY)
+        {
+            switch (direction)
+            {
+                case FlipDirection.TopToBottom:
+                case FlipDirection.RightToLeft:
+                case FlipDirection.BottomToTop:
+                case FlipDirection.LeftToRight:
+                    return CenterFrom(squares, repr, relX, relY);
+            }
+            return null;
+        }
+
+        // Flipping like this: ⤢ or ⤡
+        private static Coord? CenterFromDiagonal(FlipDirection direction, Coord[] squares, string repr, int relX, int relY)
+        {
+            if (direction == FlipDirection.TopRightToBottomLeft || direction == FlipDirection.BottomLeftToTopRight ||
+                direction == FlipDirection.TopLeftToBottomRight || direction == FlipDirection.BottomRightToTopLeft)
+                return CenterFrom(squares, repr, relX, relY);
+            return null;
+        }
+
+        // Flipping like this: ⤢
+        private static Coord? CenterFromForwardDiagonal(FlipDirection direction, Coord[] squares, string repr, int relX, int relY)
+        {
+            if (direction == FlipDirection.TopRightToBottomLeft || direction == FlipDirection.BottomLeftToTopRight)
+                return CenterFrom(squares, repr, relX, relY);
+            return null;
+        }
+
+        // Flipping like this: ⤡
+        private static Coord? CenterFromBackwardDiagonal(FlipDirection direction, Coord[] squares, string repr, int relX, int relY)
+        {
+            if (direction == FlipDirection.TopLeftToBottomRight || direction == FlipDirection.BottomRightToTopLeft)
+                return CenterFrom(squares, repr, relX, relY);
+            return null;
+        }
+
+        // Calculates the center of the flip (or null if the set of squares is not valid).
+        private static Coord? CenterFrom(Coord[] squares, string repr, int relX, int relY)
+        {
+            if (repr.Length + 1 != squares.Length)
+                return null;
+            for (var i = 0; i < squares.Length; i++)
+            {
+                var x = squares[i].X;
+                var y = squares[i].Y;
+                for (var j = 0; j < repr.Length; j++)
+                {
+                    switch (repr[j])
+                    {
+                        case '→': x++; break;
+                        case '←': x--; break;
+                        case '↑': y--; break;
+                        case '↓': y++; break;
+                        case '↗': x++; y--; break;
+                        case '↘': x++; y++; break;
+                        case '↙': x--; y++; break;
+                        case '↖': x--; y--; break;
+                    }
+                    if (!squares.Any(s => s.X == x && s.Y == y))
+                        goto busted;
+                }
+                return new Coord(5, 2 * squares[i].X + relX, 2 * squares[i].Y + relY);
+
+                busted:;
+            }
+            return null;
+        }
+
+        /// <summary>Given an arrow direction, calculates what the new arrow direction is after performing the flip.</summary>
+        public int? TranslateArrow(int? arrow)
+        {
+            // Most ridiculously optimized formula — don’t ask why it works
+            return arrow == null ? (int?) null : ((int) Direction * 2 + 12 - arrow.Value) % 8;
+        }
+
+        /// <summary>Given a square on the board, calculates where the square ends up after performing the flip.</summary>
+        public Coord TranslateSquare(Coord square)
+        {
+            return
+                Direction == FlipDirection.TopToBottom || Direction == FlipDirection.BottomToTop ? new Coord(square.Width, square.X, Center.Y - square.Y) :
+                Direction == FlipDirection.TopRightToBottomLeft || Direction == FlipDirection.BottomLeftToTopRight ? new Coord(square.Width, (Center.X + Center.Y) / 2 - square.Y, (Center.Y + Center.X) / 2 - square.X) :
+                Direction == FlipDirection.RightToLeft || Direction == FlipDirection.LeftToRight ? new Coord(square.Width, Center.X - square.X, square.Y) :
+                new Coord(square.Width, (Center.X - Center.Y) / 2 + square.Y, (Center.Y - Center.X) / 2 + square.X);
+        }
+
+        public static FlipInfo[] GetAll()
+        {
+            var allFlips = new List<FlipInfo>();
+            var allDirections = (FlipDirection[]) Enum.GetValues(typeof(FlipDirection));
+            for (var i = 1; i < (1 << 9); i++)
+            {
+                var squares = Enumerable.Range(0, 9).Where(bit => (i & (1 << bit)) != 0).Select(sq => new Coord(3, sq)).ToArray();
+                foreach (var dir in allDirections)
+                {
+                    var flip = Generate(dir, squares);
+                    if (flip != null)
+                        allFlips.Add(flip.Value);
+                }
+            }
+            return allFlips.ToArray();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Squares [{0}], Dir {1}, Center {2}", Squares.Join(", "), Direction, Center);
+        }
+    }
 
     private enum FlipDirection
     {
-        BottomToTop, BottomLeftToTopRight, LeftToRight, TopLeftToBottomRight, TopToBottom, TopRightToBottomLeft, RightToLeft, BottomRightToTopLeft
+        TopToBottom,
+        TopRightToBottomLeft,
+        RightToLeft,
+        BottomRightToTopLeft,
+        BottomToTop,
+        BottomLeftToTopRight,
+        LeftToRight,
+        TopLeftToBottomRight
     }
 
     void Start()
     {
         _moduleId = _moduleIdCounter++;
-        for (int i = 0; i < squareSelectables.Length; i++)
-            squareSelectables[i].OnInteract += SquarePress(i);
-        AssignColors();
-        DoRandomFlips();
-        //StartCoroutine(FlipSquares(new[] { 0, 1, 3, 4 }, twoBytwoXPos[0], twoBytwoZPos[0]));
+
+        var availableFlips = _allFlips.ToList();
+        _flips = new FlipInfo[9];
+
+        foreach (var sq in Enumerable.Range(0, 9).ToArray().Shuffle())
+        {
+            var eligibleFlips = Enumerable.Range(0, availableFlips.Count).Where(ix => availableFlips[ix].Squares.Any(s => s.Value == sq)).ToArray();
+            var flipIx = eligibleFlips[Rnd.Range(0, eligibleFlips.Length)];
+            _flips[sq] = availableFlips[flipIx];
+            availableFlips.RemoveAt(flipIx);
+            SquareSelectables[sq].OnInteract += SquarePress(sq);
+        }
+
+        var initialTop = Enumerable.Range(0, 9).Select(i => i == 4 ? null : (int?) Rnd.Range(0, 8)).ToArray();
+        var initialBottom = Enumerable.Range(0, 9).Select(i => (int?) Rnd.Range(0, 8)).ToArray();
+        _gameState = new GameState(initialTop, initialBottom);
+
+        StartCoroutine(AnimationQueue());
     }
 
-    private KMSelectable.OnInteractHandler SquarePress(int i)
+    private IEnumerator AnimationQueue()
+    {
+        while (!_moduleSolved || _animationQueue.Count > 0)
+        {
+            if (_animationQueue.Count > 0)
+            {
+                var item = _animationQueue.Dequeue();
+                while (item.MoveNext())
+                    yield return item.Current;
+            }
+            yield return null;
+        }
+    }
+
+    private KMSelectable.OnInteractHandler SquarePress(int sq)
     {
         return delegate
         {
-            if (!isFlipping)
-            {
-                if (!chosenSquares.Contains(i))
-                {
-                    chosenSquares.Add(i);
-                    selectionObjs[i].SetActive(true);
-                }
-                else
-                {
-                    //flip something
-                    for (int so = 0; so < 9; so++)
-                        selectionObjs[so].SetActive(false);
-                    PerformFlip(chosenSquares);
-                    chosenSquares = new List<int>();
-                }
-            }
+            if (_moduleSolved)
+                return false;
+
+            _animationQueue.Enqueue(FlipSquares(_flips[sq]));
+            _gameState = _gameState.PerformFlip(_flips[sq]);
             return false;
         };
     }
 
-    private void PerformFlip(List<int> squares)
+    private IEnumerator FlipSquares(FlipInfo flip)
     {
-        if (squares.Count == 1) // ONE SQUARE
-        {
-            OuterFlip.transform.localPosition = new Vector3(xPos[chosenSquares[0] % 3], 0f, zPos[chosenSquares[0] / 3]);
-            flipXPos = xPos[chosenSquares[0] % 3];
-            flipZPos = zPos[chosenSquares[0] / 3];
-        }
-        else if (squares.Count() == 2) // TWO SQUARES
-        {
-            if (squares[0] / 3 == squares[1] / 3) // are they in the same row
-            {
-                if (Math.Abs(squares[0] + squares[1]) % 3 == 1) // are they in columns AB
-                    flipXPos = twoWideCols[0];
-                else if (Math.Abs(squares[0] + squares[1]) % 3 == 0) // are they in columns BC
-                    flipXPos = twoWideCols[1];
-                else // are they in columns AC
-                    flipXPos = xPos[1];
-                flipZPos = zPos[squares[0] / 3];
-            }
-            else if (squares[0] % 3 == squares[1] % 3) // are they in the same column
-            {
-                if (Math.Abs(squares[0] - squares[1]) == 3 && squares[0] + squares[1] < 8) // are they in rows 12
-                    flipZPos = twoWideRows[0];
-                else if (Math.Abs(squares[0] - squares[1]) == 3 && squares[0] + squares[1] > 8) // are they in rows 23
-                    flipZPos = twoWideRows[1];
-                else // are they in rows 13
-                    flipZPos = zPos[1];
-                flipXPos = xPos[squares[0] % 3];
-            }
-            else if (Math.Abs(squares[0] - squares[1]) == 2 || Math.Abs(squares[0] - squares[1]) == 4) // are they at corners TR BL or TL BR (in 2 by 2 area)
-            {
-                if ((squares[0] + squares[1]) % 6 == 0) // are they in columns BC
-                    flipXPos = twoWideCols[1];
-                else // are they in columns AB
-                    flipXPos = twoWideCols[0];
-                if (squares[0] + squares[1] < 8) // are they in rows 12
-                    flipZPos = twoWideRows[0];
-                else // are they in rows 23
-                    flipZPos = twoWideRows[1];
-            }
-            else if (squares[0] + squares[1] == 8) // are they in opposite corners in 3 by 3 area
-            {
-                flipXPos = xPos[1];
-                flipZPos = zPos[1];
-            }
-            else
-            {
-                Debug.LogFormat("not a valid flip");
-                validFlip = false;
-            }
-        }
-        if (validFlip)
-        {
-            posLocator.transform.localPosition = new Vector3(flipXPos, 0.02f, flipZPos);
-            posLocator.SetActive(true);
-            StartCoroutine(FlipSquares(squares, flipXPos, flipZPos, FlipDirection.TopToBottom));
-        }
-        validFlip = true;
-    }
+        OuterFlip.transform.localPosition = new Vector3(-.045f + .0225f * flip.Center.X, 0f, .045f - .0225f * flip.Center.Y);
+        OuterFlip.transform.localEulerAngles = new Vector3(0f, 45 * (int) flip.Direction, 0f);
+        InnerFlip.transform.localRotation = Quaternion.identity;
+        foreach (var square in flip.Squares)
+            ButtonObjects[square.Value].transform.parent = InnerFlip.transform;
 
-    private void DoRandomFlips()
-    {
-
-    }
-
-    private void AssignColors()
-    {
-        for (int i = 0; i < 9; i++)
-            ButtonObjects[i].transform.GetChild(0).GetComponent<MeshRenderer>().material.color = colors[i];
-    }
-
-    private IEnumerator FlipSquares(IEnumerable<int> squares, float x, float z, FlipDirection f)
-    {
-        isFlipping = true;
-        //yield return new WaitForSeconds(1f);
-        OuterFlip.transform.localPosition = new Vector3(x, 0f, z);
-        OuterFlip.transform.localEulerAngles = new Vector3(0f, 45 * (int)f, 0f);
-        foreach (var square in squares)
-            ButtonObjects[square].transform.parent = InnerFlip.transform;
         var duration = 0.5f;
         var elapsed = 0f;
         while (elapsed < duration)
@@ -177,15 +309,11 @@ public class FlippingSquaresScript : MonoBehaviour
             elapsed += Time.deltaTime;
         }
         InnerFlip.transform.localEulerAngles = new Vector3(180f, 0f, 0f);
-        foreach (var square in squares)
+        foreach (var square in flip.Squares)
         {
-            ButtonObjects[square].transform.parent = ButtonParent.transform;
-            ButtonObjects[square].transform.localPosition = new Vector3(-0.045f + .045f * (square % 3), 0, 0.045f - .045f * (square / 3));
-            ButtonObjects[square].transform.localRotation = Quaternion.identity;
+            ButtonObjects[square.Value].transform.parent = ButtonParent.transform;
+            ButtonObjects[square.Value].transform.localPosition = new Vector3(-0.045f + .045f * square.X, 0, 0.045f - .045f * square.Y);
+            ButtonObjects[square.Value].transform.localRotation = Quaternion.identity;
         }
-        InnerFlip.transform.localRotation = Quaternion.identity;
-        OuterFlip.transform.localRotation = Quaternion.identity;
-        posLocator.SetActive(false);
-        isFlipping = false;
     }
 }
