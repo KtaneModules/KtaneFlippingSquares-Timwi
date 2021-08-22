@@ -106,6 +106,69 @@ namespace FlippingSquares
                 /* 6 */
                 CenterFromOrthogonal(direction, squares, "↓↗↓↗↓", 2, 1) ??
                 CenterFromOrthogonal(direction, squares, "→↙→↙→", 1, 2) ??
+                CenterFromLeftRight(direction, squares, "↓→↓↗↑", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "↑→↑↘↓", 2, -2) ??
+                CenterFromUpDown(direction, squares, "→↓→↙←", 2, 2) ??
+                CenterFromUpDown(direction, squares, "←↓←↘→", -2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→→↙↙↑", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→→↖↖↓", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↓↓→→↖", 2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→→↑↑↙", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→↘↓←↖", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→↗↑←↙", 2, -2) ??
+                CenterFromLeftRight(direction, squares, "↘↙→→⇑", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↙↙⇒", 2, 2) ??
+                CenterFromUpDown(direction, squares, "↓↓↗↗⇓", 2, 2) ??
+                CenterFromUpDown(direction, squares, "↘↗↓↓⇐", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "↓↘↑↑↘", 2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↑↗↓↓↗", 2, -2) ??
+                CenterFromForwardDiagonal(direction, squares, "←↖↗↘←", -2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "←↙→→↙", -2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↓↙↖", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↑↖↙", 2, -2) ??
+                CenterFromUpDown(direction, squares, "↓↓→↗↖", 2, 2) ??
+                CenterFromUpDown(direction, squares, "↓↓←↖↗", -2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↓→↓→⇑", 2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→↓→↓⇐", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "↑→↑→⇓", 2, -2) ??
+                CenterFromForwardDiagonal(direction, squares, "→↑→↑⇐", 2, -2) ??
+
+                /* 7 */
+                CenterFromLeftRight(direction, squares, "→→↓←←↘", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↑←←↗", 2, -2) ??
+                CenterFromUpDown(direction, squares, "↓↓→↑↑↘", 2, 2) ??
+                CenterFromUpDown(direction, squares, "↓↓←↑↑↙", -2, 2) ??
+                CenterFromLeftRight(direction, squares, "↓↓↗↗↓↓", 2, 2) ??
+                CenterFromUpDown(direction, squares, "→→↙↙→→", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "↑↗↓↓↗↑", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↓↘↑↑↘↓", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "↓↓→→↑↑", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "↑↑→→↓↓", 2, -2) ??
+                CenterFromUpDown(direction, squares, "→→↓↓←←", 2, 2) ??
+                CenterFromUpDown(direction, squares, "←←↓↓→→", -2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "↘↙→→↑↑", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "↖↙↑↑→→", -2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↗↖→→↓↓", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "↙↘←←↑↑", -2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→→↓↙←↑", 2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "→→↑↖←↓", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→→↓↓←↖", 2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→↘←←↑↑", 2, 2) ??
+
+                /* 8 */
+                CenterFrom(squares, "→→↓↓←←↑", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↓↓↖←↓", 2, 2) ??
+                CenterFromLeftRight(direction, squares, "→→↑↑↙←↑", 2, -2) ??
+                CenterFromUpDown(direction, squares, "→→↑↑←←↘", 2, -2) ??
+                CenterFromUpDown(direction, squares, "←←↑↑→→↙", -2, -2) ??
+                CenterFromForwardDiagonal(direction, squares, "→→↓←←↓→", 2, 2) ??
+                CenterFromBackwardDiagonal(direction, squares, "→→↑←←↑→", 2, -2) ??
+                CenterFromBackwardDiagonal(direction, squares, "←←↓→→↓←", -2, 2) ??
+                CenterFromForwardDiagonal(direction, squares, "←←↑→→↑←", -2, -2) ??
+
+                /* 9 */
+                CenterFrom(squares, "→→↓←←↓→→", 2, 2) ??
+
                 null;
             if (center == null)
                 return null;
@@ -159,7 +222,7 @@ namespace FlippingSquares
                 {
                     switch (repr[j])
                     {
-                        case '→': x++; break;
+                        case '→': x++; break; 
                         case '←': x--; break;
                         case '↑': y--; break;
                         case '↓': y++; break;
@@ -168,7 +231,7 @@ namespace FlippingSquares
                         case '↙': x--; y++; break;
                         case '↖': x--; y--; break;
                         case '⇒': x += 2; break;
-                        case '⇐': x -= 2; break;
+                        case '⇐': x -= 2; break; 
                         case '⇑': y -= 2; break;
                         case '⇓': y += 2; break;
                     }
