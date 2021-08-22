@@ -32,12 +32,14 @@ public class FlippingSquaresModule : MonoBehaviour
     private int _moduleId;
     private bool _moduleSolved = false;
     private FlipInfo[] _buttonFlips;
-    private FlipInfo[] _solutionFlips;
+    private int[] _solutionFlipIxs;
     private readonly List<FlipInfo> _performedFlips = new List<FlipInfo>();
     private GameState _gameState;
+    private GameState _solutionState;
 
     private static readonly FlipInfo[] _allFlips = FlipInfo.GetAll();
     private readonly Queue<IEnumerator> _animationQueue = new Queue<IEnumerator>();
+    private float? _timeSquarePressed = null;
 
     void Start()
     {
@@ -53,6 +55,7 @@ public class FlippingSquaresModule : MonoBehaviour
             _buttonFlips[sq] = availableFlips[flipIx];
             availableFlips.RemoveAt(flipIx);
             SquareSelectables[sq].OnInteract += SquarePress(sq);
+            SquareSelectables[sq].OnInteractEnded += SquareRelease(sq);
         }
 
         IEnumerable<JObject> edgework(string key) => Bomb.QueryWidgets(key, null).Where(str => str != null).Select(str => JObject.Parse(str));
@@ -95,15 +98,19 @@ public class FlippingSquaresModule : MonoBehaviour
         var initialArrowsBottom = new int[9];
         var even = Enumerable.Range(0, 4).Select(i => i * 2).ToList().Shuffle();
         var odd = Enumerable.Range(0, 4).Select(i => i * 2 + 1).ToList().Shuffle();
+
         for (var i = 0; i < 9; i++)
-            if (initialArrowsTop[i] == -1)
+        {
+            var counterpart = initialArrowsTop[Array.IndexOf(initialColorsTop, initialColorsBottom[i])];
+            if (counterpart == -1)
                 initialArrowsBottom[i] = -2;
             else
             {
-                var lst = initialArrowsTop[i] % 2 != 0 ? even : odd;
+                var lst = counterpart % 2 != 0 ? even : odd;
                 initialArrowsBottom[i] = lst[0];
                 lst.RemoveAt(0);
             }
+        }
 
         var iterations = 0;
         tryAgain:
@@ -111,16 +118,21 @@ public class FlippingSquaresModule : MonoBehaviour
             throw new InvalidOperationException();
         iterations++;
 
-        _solutionFlips = Enumerable.Range(0, 9).Select(i => _buttonFlips[Rnd.Range(0, 9)]).ToArray();
-        for (var i = 0; i < _solutionFlips.Length; i++)
-            for (var j = i + 2; j < _solutionFlips.Length; j++)
-                if (_solutionFlips[j].Equals(_solutionFlips[i]) && Enumerable.Range(i, j - i - 1).All(ix => !_solutionFlips[ix].AnyIntersection(_solutionFlips[ix])))
+        _solutionFlipIxs = Enumerable.Range(0, 5).Select(i => Rnd.Range(0, 9)).ToArray();
+        for (var i = 0; i < _solutionFlipIxs.Length; i++)
+            for (var j = i + 1; j < _solutionFlipIxs.Length; j++)
+                if (_solutionFlipIxs[j].Equals(_solutionFlipIxs[i]) && Enumerable.Range(i, j - i - 1).All(ix => !_buttonFlips[_solutionFlipIxs[ix]].AnyIntersection(_buttonFlips[_solutionFlipIxs[i]])))
                     goto tryAgain;
 
-        _gameState = new GameState(initialArrowsTop.ToArray(), initialColorsTop, initialArrowsBottom, initialColorsBottom);
-        foreach (var flip in _solutionFlips)
-            _gameState = _gameState.PerformFlip(flip);
-        Array.Reverse(_solutionFlips);
+        _solutionState = new GameState(initialArrowsTop.ToArray(), initialColorsTop, initialArrowsBottom, initialColorsBottom);
+
+        Debug.Log($"[Flipping Squares #{_moduleId}] Intended solution:\n{_solutionState}");
+        //Debug.Log($"[Flipping Squares #{_moduleId}] Possible sequence: {_solutionFlipIxs.JoinString(", ")}");
+
+        _gameState = _solutionState;
+        foreach (var flipIx in _solutionFlipIxs)
+            _gameState = _gameState.PerformFlip(_buttonFlips[flipIx]);
+        Array.Reverse(_solutionFlipIxs);
 
         UpdateVisuals(_gameState);
         StartCoroutine(AnimationQueue());
@@ -136,7 +148,8 @@ public class FlippingSquaresModule : MonoBehaviour
                 while (item.MoveNext())
                     yield return item.Current;
             }
-            yield return null;
+            else
+                yield return null;
         }
     }
 
@@ -146,26 +159,56 @@ public class FlippingSquaresModule : MonoBehaviour
         {
             if (_moduleSolved)
                 return false;
-
-            _gameState = _gameState.PerformFlip(_buttonFlips[sq]);
-            _animationQueue.Enqueue(FlipSquares(_buttonFlips[sq], _gameState));
+            _timeSquarePressed = Time.time;
             return false;
         };
     }
 
-    private IEnumerator FlipSquares(FlipInfo flip, GameState finalState)
+    private Action SquareRelease(int sq)
     {
+        return delegate
+        {
+            if (_moduleSolved)
+                return;
+
+            if (Time.time - _timeSquarePressed < 1)
+            {
+                // short press: perform a flip
+                _performedFlips.Add(_buttonFlips[sq]);
+                _gameState = _gameState.PerformFlip(_buttonFlips[sq]);
+                if (_gameState.Equals(_solutionState))
+                    _moduleSolved = true;
+                _animationQueue.Enqueue(FlipSquares(_buttonFlips[sq], _gameState, _moduleSolved, fast: false));
+            }
+            else
+            {
+                // long press: reset
+                for (int i = _performedFlips.Count - 1; i >= 0; i--)
+                {
+                    _gameState = _gameState.PerformFlip(_performedFlips[i]);
+                    _animationQueue.Enqueue(FlipSquares(_performedFlips[i], _gameState, solveAtEnd: false, fast: true));
+                }
+                _performedFlips.Clear();
+            }
+            _timeSquarePressed = null;
+        };
+    }
+
+    private IEnumerator FlipSquares(FlipInfo flip, GameState finalState, bool solveAtEnd, bool fast)
+    {
+        yield return null;
+
         OuterFlip.transform.localPosition = new Vector3(-.045f + .0225f * flip.Center.X, 0f, .045f - .0225f * flip.Center.Y);
         OuterFlip.transform.localEulerAngles = new Vector3(0f, 45 * (int) flip.Direction, 0f);
         InnerFlip.transform.localRotation = Quaternion.identity;
         foreach (var square in flip.Squares)
             ButtonObjects[square.Index].transform.parent = InnerFlip.transform;
 
-        var duration = 0.5f;
+        var duration = fast ? .1f : .5f;
         var elapsed = 0f;
         while (elapsed < duration)
         {
-            InnerFlip.transform.localEulerAngles = new Vector3(Easing.InOutQuad(elapsed, 0f, -180f, duration), 0f, 0f);
+            InnerFlip.transform.localEulerAngles = new Vector3(fast ? Mathf.Lerp(0f, -180f, elapsed / duration) : Easing.InOutQuad(elapsed, 0f, -180f, duration), 0f, 0f);
             yield return null;
             elapsed += Time.deltaTime;
         }
@@ -177,14 +220,21 @@ public class FlippingSquaresModule : MonoBehaviour
             ButtonObjects[square.Index].transform.localRotation = Quaternion.identity;
         }
         UpdateVisuals(finalState);
+
+        if (solveAtEnd)
+        {
+            Debug.Log($"[Flipping Squares #{_moduleId}] Module solved.");
+            Module.HandlePass();
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
+        }
     }
 
     private void UpdateVisuals(GameState state)
     {
         for (var i = 0; i < 9; i++)
         {
-            ButtonFronts[i].material.color = Colors[_gameState.TopColors[i]];
-            ButtonBacks[i].material.color = Colors[_gameState.BottomColors[i]];
+            ButtonFronts[i].material.color = Colors[state.TopColors[i]];
+            ButtonBacks[i].material.color = Colors[state.BottomColors[i]];
 
             void setArrow(Transform arrow, Transform button, int dir, bool bottom)
             {

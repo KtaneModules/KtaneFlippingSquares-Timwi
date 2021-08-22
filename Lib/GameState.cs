@@ -1,10 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System;
 using System.Linq;
 using RT.Util.ExtensionMethods;
 
 namespace FlippingSquares
 {
-    struct GameState
+    struct GameState : IEquatable<GameState>
     {
         // -1 = status light; -2 = empty
         public int[] TopArrows { get; private set; }
@@ -45,5 +45,9 @@ namespace FlippingSquares
             const string colors = "ROYGHCBPI";
             return Enumerable.Range(0, 3).Select(row => arr.Select(tup => Enumerable.Range(0, 3).Select(col => $"{colors[tup.colors[col + 3 * row]]}{arrows[tup.arrs[col + 3 * row] + 2]}").JoinString(" ")).JoinString("    ")).JoinString("\n");
         }
+
+        public bool Equals(GameState other) => TopArrows.SequenceEqual(other.TopArrows) && TopColors.SequenceEqual(other.TopColors);
+        public override bool Equals(object obj) => obj is GameState other && Equals(other);
+        public override int GetHashCode() => TopArrows.Aggregate(0, (p, n) => unchecked(p * 18341683 + n));
     }
 }
