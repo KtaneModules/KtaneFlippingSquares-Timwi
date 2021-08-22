@@ -1,14 +1,13 @@
-﻿struct Coord
+﻿namespace FlippingSquares
 {
-    public int Value;
-    public int Width;
-    public int X { get { return Value % Width; } }
-    public int Y { get { return Value / Width; } }
-    public Coord(int width, int value) { Value = value; Width = width; }
-    public Coord(int width, int x, int y) { Value = x + width * y; Width = width; }
-
-    public override string ToString()
+    struct Coord
     {
-        return string.Format("{2}=({0}, {1})", X, Y, Value);
+        public int Index;
+        public int Width;
+        public int X => Index % Width;
+        public int Y => Index / Width;
+        public Coord(int width, int index) { Width = width; Index = index; }
+        public Coord(int width, int x, int y) : this(width, x + width * y) { }
+        public override string ToString() => $"({X}, {Y})/{Width}";
     }
 }

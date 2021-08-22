@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: FlippingSquares
   title: Flipping Squares
-  author: JakkOfKlubs
+  author: JakkOfKlubs & Timwi
   description: Flipping Squares
   version: 1.0
   outputFolder: build

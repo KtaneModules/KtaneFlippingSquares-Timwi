@@ -1,11 +1,14 @@
-﻿enum FlipDirection
+﻿namespace FlippingSquares
 {
-    TopToBottom,
-    TopRightToBottomLeft,
-    RightToLeft,
-    BottomRightToTopLeft,
-    BottomToTop,
-    BottomLeftToTopRight,
-    LeftToRight,
-    TopLeftToBottomRight
+    enum FlipDirection
+    {
+        TopToBottom,
+        TopRightToBottomLeft,
+        RightToLeft,
+        BottomRightToTopLeft,
+        BottomToTop,
+        BottomLeftToTopRight,
+        LeftToRight,
+        TopLeftToBottomRight
+    }
 }

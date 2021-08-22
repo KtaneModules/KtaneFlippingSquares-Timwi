@@ -35,38 +35,36 @@ namespace RT.Util.ExtensionMethods
             if (lastSeparator == null)
                 lastSeparator = separator;
 
-            using (var enumerator = values.GetEnumerator())
+            using var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext())
+                return "";
+
+            // Optimise the case where there is only one element
+            var one = enumerator.Current;
+            if (!enumerator.MoveNext())
+                return prefix + one + suffix;
+
+            // Optimise the case where there are only two elements
+            var two = enumerator.Current;
+            if (!enumerator.MoveNext())
             {
-                if (!enumerator.MoveNext())
-                    return "";
-
-                // Optimise the case where there is only one element
-                var one = enumerator.Current;
-                if (!enumerator.MoveNext())
-                    return prefix + one + suffix;
-
-                // Optimise the case where there are only two elements
-                var two = enumerator.Current;
-                if (!enumerator.MoveNext())
-                {
-                    // Optimise the (common) case where there is no prefix/suffix; this prevents an array allocation when calling string.Concat()
-                    if (prefix == null && suffix == null)
-                        return one + lastSeparator + two;
-                    return prefix + one + suffix + lastSeparator + prefix + two + suffix;
-                }
-
-                StringBuilder sb = new StringBuilder()
-                    .Append(prefix).Append(one).Append(suffix).Append(separator)
-                    .Append(prefix).Append(two).Append(suffix);
-                var prev = enumerator.Current;
-                while (enumerator.MoveNext())
-                {
-                    sb.Append(separator).Append(prefix).Append(prev).Append(suffix);
-                    prev = enumerator.Current;
-                }
-                sb.Append(lastSeparator).Append(prefix).Append(prev).Append(suffix);
-                return sb.ToString();
+                // Optimise the (common) case where there is no prefix/suffix; this prevents an array allocation when calling string.Concat()
+                if (prefix == null && suffix == null)
+                    return one + lastSeparator + two;
+                return prefix + one + suffix + lastSeparator + prefix + two + suffix;
             }
+
+            StringBuilder sb = new StringBuilder()
+                .Append(prefix).Append(one).Append(suffix).Append(separator)
+                .Append(prefix).Append(two).Append(suffix);
+            var prev = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                sb.Append(separator).Append(prefix).Append(prev).Append(suffix);
+                prev = enumerator.Current;
+            }
+            sb.Append(lastSeparator).Append(prefix).Append(prev).Append(suffix);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -460,31 +458,29 @@ namespace RT.Util.ExtensionMethods
             if (valueSelector == null)
                 throw new ArgumentNullException(nameof(valueSelector));
 
-            using (var enumerator = source.GetEnumerator())
+            using var enumerator = source.GetEnumerator();
+            if (!enumerator.MoveNext())
             {
-                if (!enumerator.MoveNext())
-                {
-                    if (doThrow)
-                        throw new InvalidOperationException("source contains no elements.");
-                    return null;
-                }
-                var minMaxElem = enumerator.Current;
-                var minMaxValue = valueSelector(minMaxElem);
-                var minMaxIndex = 0;
-                var curIndex = 0;
-                while (enumerator.MoveNext())
-                {
-                    curIndex++;
-                    var value = valueSelector(enumerator.Current);
-                    if (min ? (value.CompareTo(minMaxValue) < 0) : (value.CompareTo(minMaxValue) > 0))
-                    {
-                        minMaxValue = value;
-                        minMaxElem = enumerator.Current;
-                        minMaxIndex = curIndex;
-                    }
-                }
-                return (minMaxIndex, minMaxElem);
+                if (doThrow)
+                    throw new InvalidOperationException("source contains no elements.");
+                return null;
             }
+            var minMaxElem = enumerator.Current;
+            var minMaxValue = valueSelector(minMaxElem);
+            var minMaxIndex = 0;
+            var curIndex = 0;
+            while (enumerator.MoveNext())
+            {
+                curIndex++;
+                var value = valueSelector(enumerator.Current);
+                if (min ? (value.CompareTo(minMaxValue) < 0) : (value.CompareTo(minMaxValue) > 0))
+                {
+                    minMaxValue = value;
+                    minMaxElem = enumerator.Current;
+                    minMaxIndex = curIndex;
+                }
+            }
+            return (minMaxIndex, minMaxElem);
         }
 
         /// <summary>
