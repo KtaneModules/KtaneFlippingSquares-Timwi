@@ -56,7 +56,7 @@ namespace FlippingSquares
                 CenterFromBackwardDiagonal(direction, squares, "↓↘→", 1, 3) ??
                 CenterFromBackwardDiagonal(direction, squares, "→↘↓", 3, 1) ??
                 CenterFromForwardDiagonal(direction, squares, "←↙↓", -3, 1) ??
-                CenterFromForwardDiagonal(direction, squares, "←↖↑", -3, -1) ??
+                CenterFromForwardDiagonal(direction, squares, "↓↙←", -1, 3) ??
                 CenterFromLeftRight(direction, squares, "↑↖⇒", 0, 0) ??
                 CenterFromLeftRight(direction, squares, "↓↙⇒", 0, 0) ??
                 CenterFromUpDown(direction, squares, "→↗⇓", 0, 0) ??
@@ -71,103 +71,103 @@ namespace FlippingSquares
                 CenterFromForwardDiagonal(direction, squares, "↙⇑⇒", 0, 0) ??
                 CenterFromForwardDiagonal(direction, squares, "↙⇒⇑", 0, 0) ??
 
-                /* 5 */
-                CenterFromBackwardDiagonal(direction, squares, "↓↓→→", 0, 4) ??
-                CenterFromBackwardDiagonal(direction, squares, "→→↓↓", 4, 0) ??
-                CenterFromForwardDiagonal(direction, squares, "←←↓↓", -4, 0) ??
-                CenterFromForwardDiagonal(direction, squares, "↓↓←←", 0, 4) ??
-                CenterFrom(squares, "↙→→↙", 0, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↙↓", 2, 0) ??
-                CenterFromLeftRight(direction, squares, "→→↖↑", 2, 0) ??
-                CenterFromUpDown(direction, squares, "↓↓↗→", 0, 2) ??
-                CenterFromUpDown(direction, squares, "↓↓↖←", 0, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "←↓←↓", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→↑→↑", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→↓→↓", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "←↑←↑", -2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "←↖↗↘", -2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "→↘↙↖", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↓↙↖↗", -2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→↗↖↙", 2, -2) ??
-                CenterFrom(squares, "↖⇓⇒⇑", 0, 0) ??
-                CenterFromLeftRight(direction, squares, "↓→→↑", 2, 0) ??
-                CenterFromLeftRight(direction, squares, "↑→→↓", 2, 0) ??
-                CenterFromUpDown(direction, squares, "←↓↓→", 0, 2) ??
-                CenterFromUpDown(direction, squares, "→↓↓←", 0, 2) ??
-                CenterFromLeftRight(direction, squares, "↓↘↗↑", 2, 0) ??
-                CenterFromLeftRight(direction, squares, "↑↗↘↓", 2, 0) ??
-                CenterFromUpDown(direction, squares, "→↘↙←", 0, 2) ??
-                CenterFromUpDown(direction, squares, "←↙↘→", 0, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↗→↑←", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↙↓←↑", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↖↑←↓", -2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "↘↓→↑", 2, 2) ??
+                ///* 5 */
+                //CenterFromBackwardDiagonal(direction, squares, "↓↓→→", 0, 4) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→→↓↓", 4, 0) ??
+                //CenterFromForwardDiagonal(direction, squares, "←←↓↓", -4, 0) ??
+                //CenterFromForwardDiagonal(direction, squares, "↓↓←←", 0, 4) ??
+                //CenterFrom(squares, "↙→→↙", 0, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↙↓", 2, 0) ??
+                //CenterFromLeftRight(direction, squares, "→→↖↑", 2, 0) ??
+                //CenterFromUpDown(direction, squares, "↓↓↗→", 0, 2) ??
+                //CenterFromUpDown(direction, squares, "↓↓↖←", 0, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "←↓←↓", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→↑→↑", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→↓→↓", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "←↑←↑", -2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "←↖↗↘", -2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→↘↙↖", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↓↙↖↗", -2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→↗↖↙", 2, -2) ??
+                //CenterFrom(squares, "↖⇓⇒⇑", 0, 0) ??
+                //CenterFromLeftRight(direction, squares, "↓→→↑", 2, 0) ??
+                //CenterFromLeftRight(direction, squares, "↑→→↓", 2, 0) ??
+                //CenterFromUpDown(direction, squares, "←↓↓→", 0, 2) ??
+                //CenterFromUpDown(direction, squares, "→↓↓←", 0, 2) ??
+                //CenterFromLeftRight(direction, squares, "↓↘↗↑", 2, 0) ??
+                //CenterFromLeftRight(direction, squares, "↑↗↘↓", 2, 0) ??
+                //CenterFromUpDown(direction, squares, "→↘↙←", 0, 2) ??
+                //CenterFromUpDown(direction, squares, "←↙↘→", 0, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↗→↑←", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↙↓←↑", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↖↑←↓", -2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↘↓→↑", 2, 2) ??
 
-                /* 6 */
-                CenterFromOrthogonal(direction, squares, "↓↗↓↗↓", 2, 1) ??
-                CenterFromOrthogonal(direction, squares, "→↙→↙→", 1, 2) ??
-                CenterFromLeftRight(direction, squares, "↓→↓↗↑", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "↑→↑↘↓", 2, -2) ??
-                CenterFromUpDown(direction, squares, "→↓→↙←", 2, 2) ??
-                CenterFromUpDown(direction, squares, "←↓←↘→", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→→↙↙↑", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→→↖↖↓", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↓↓→→↖", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→→↑↑↙", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→↘↓←↖", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→↗↑←↙", 2, -2) ??
-                CenterFromLeftRight(direction, squares, "↘↙→→⇑", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↙↙⇒", 2, 2) ??
-                CenterFromUpDown(direction, squares, "↓↓↗↗⇓", 2, 2) ??
-                CenterFromUpDown(direction, squares, "↘↗↓↓⇐", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↓↘↑↑↘", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↑↗↓↓↗", 2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "←↖↗↘←", -2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "←↙→→↙", -2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↓↙↖", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↑↖↙", 2, -2) ??
-                CenterFromUpDown(direction, squares, "↓↓→↗↖", 2, 2) ??
-                CenterFromUpDown(direction, squares, "↓↓←↖↗", -2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↓→↓→⇑", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→↓→↓⇐", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↑→↑→⇓", 2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "→↑→↑⇐", 2, -2) ??
+                ///* 6 */
+                //CenterFromOrthogonal(direction, squares, "↓↗↓↗↓", 2, 1) ??
+                //CenterFromOrthogonal(direction, squares, "→↙→↙→", 1, 2) ??
+                //CenterFromLeftRight(direction, squares, "↓→↓↗↑", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "↑→↑↘↓", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "→↓→↙←", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "←↓←↘→", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→→↙↙↑", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→→↑↑↙", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→→↖↖↓", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↓↓→→↖", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→↘↓←↖", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→↗↑←↙", 2, -2) ??
+                //CenterFromLeftRight(direction, squares, "↘↙→→⇑", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↙↙⇒", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "↓↓↗↗⇓", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "↘↗↓↓⇐", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↓↘↑↑↘", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↑↗↓↓↗", 2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "←↖↗↘←", -2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "←↙→→↙", -2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↓↙↖", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↑↖↙", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "↓↓→↗↖", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "↓↓←↖↗", -2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↓→↓→⇑", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→↓→↓⇐", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↑→↑→⇓", 2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→↑→↑⇐", 2, -2) ??
 
-                /* 7 */
-                CenterFromLeftRight(direction, squares, "→→↓←←↘", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↑←←↗", 2, -2) ??
-                CenterFromUpDown(direction, squares, "↓↓→↑↑↘", 2, 2) ??
-                CenterFromUpDown(direction, squares, "↓↓←↑↑↙", -2, 2) ??
-                CenterFromLeftRight(direction, squares, "↓↓↗↗↓↓", 2, 2) ??
-                CenterFromUpDown(direction, squares, "→→↙↙→→", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↑↗↓↓↗↑", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↓↘↑↑↘↓", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "↓↓→→↑↑", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "↑↑→→↓↓", 2, -2) ??
-                CenterFromUpDown(direction, squares, "→→↓↓←←", 2, 2) ??
-                CenterFromUpDown(direction, squares, "←←↓↓→→", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↘↙→→↑↑", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "↖↙↑↑→→", -2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↗↖→→↓↓", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "↙↘←←↑↑", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→→↓↙←↑", 2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "→→↑↖←↓", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→→↓↓←↖", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→↘←←↑↑", 2, 2) ??
+                ///* 7 */
+                //CenterFromLeftRight(direction, squares, "→→↓←←↘", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↑←←↗", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "↓↓→↑↑↘", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "↓↓←↑↑↙", -2, 2) ??
+                //CenterFromLeftRight(direction, squares, "↓↓↗↗↓↓", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "→→↙↙→→", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↑↗↓↓↗↑", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↓↘↑↑↘↓", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "↓↓→→↑↑", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "↑↑→→↓↓", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "→→↓↓←←", 2, 2) ??
+                //CenterFromUpDown(direction, squares, "←←↓↓→→", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↘↙→→↑↑", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "↖↙↑↑→→", -2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↗↖→→↓↓", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "↙↘←←↑↑", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→→↓↙←↑", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→→↑↖←↓", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→→↓↓←↖", 2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→↓↓←←↑", 0, 2) ??
 
-                /* 8 */
-                CenterFrom(squares, "→→↓↓←←↑", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↓↓↖←↓", 2, 2) ??
-                CenterFromLeftRight(direction, squares, "→→↑↑↙←↑", 2, -2) ??
-                CenterFromUpDown(direction, squares, "→→↑↑←←↘", 2, -2) ??
-                CenterFromUpDown(direction, squares, "←←↑↑→→↙", -2, -2) ??
-                CenterFromForwardDiagonal(direction, squares, "→→↓←←↓→", 2, 2) ??
-                CenterFromBackwardDiagonal(direction, squares, "→→↑←←↑→", 2, -2) ??
-                CenterFromBackwardDiagonal(direction, squares, "←←↓→→↓←", -2, 2) ??
-                CenterFromForwardDiagonal(direction, squares, "←←↑→→↑←", -2, -2) ??
+                ///* 8 */
+                //CenterFrom(squares, "→→↓↓←←↑", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↓↓↖←↓", 2, 2) ??
+                //CenterFromLeftRight(direction, squares, "→→↑↑↙←↑", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "→→↑↑←←↘", 2, -2) ??
+                //CenterFromUpDown(direction, squares, "←←↑↑→→↙", -2, -2) ??
+                //CenterFromForwardDiagonal(direction, squares, "→→↓←←↓→", 2, 2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "→→↑←←↑→", 2, -2) ??
+                //CenterFromBackwardDiagonal(direction, squares, "←←↓→→↓←", -2, 2) ??
+                //CenterFromForwardDiagonal(direction, squares, "←←↑→→↑←", -2, -2) ??
 
-                /* 9 */
-                CenterFrom(squares, "→→↓←←↓→→", 2, 2) ??
+                ///* 9 */
+                //CenterFrom(squares, "→→↓←←↓→→", 2, 2) ??
 
                 null;
             if (center == null)
@@ -222,7 +222,7 @@ namespace FlippingSquares
                 {
                     switch (repr[j])
                     {
-                        case '→': x++; break; 
+                        case '→': x++; break;
                         case '←': x--; break;
                         case '↑': y--; break;
                         case '↓': y++; break;
@@ -231,7 +231,7 @@ namespace FlippingSquares
                         case '↙': x--; y++; break;
                         case '↖': x--; y--; break;
                         case '⇒': x += 2; break;
-                        case '⇐': x -= 2; break; 
+                        case '⇐': x -= 2; break;
                         case '⇑': y -= 2; break;
                         case '⇓': y += 2; break;
                     }
@@ -273,9 +273,26 @@ namespace FlippingSquares
             return allFlips.ToArray();
         }
 
-        public override string ToString() => string.Format("Squares [{0}], Dir {1}, Center {2}", Squares.JoinString(", "), Direction, Center);
+        public override string ToString()
+        {
+            var rem = new List<Coord>(Squares);
+            var flips = new List<(Coord from, Coord to)>();
+            while (rem.Count > 0)
+            {
+                var one = rem[0];
+                rem.RemoveAt(0);
+                var two = TranslateSquare(one);
+                rem.Remove(two);
+                flips.Add((one, two));
+            }
+            return $"Squares [{flips.Select(fl => $"{fl.from.Index}↔{fl.to.Index}").JoinString(",")}], Dir {(int) Direction % 4}";
+        }
 
         public bool Equals(FlipInfo other) => other.Direction == Direction && other.Squares.SequenceEqual(Squares);
+        public override bool Equals(object obj) => obj is FlipInfo other && Equals(other);
         public bool AnyIntersection(FlipInfo other) => Squares.Any(sq => other.Squares.Contains(sq));
+        public static bool operator ==(FlipInfo one, FlipInfo two) => one.Equals(two);
+        public static bool operator !=(FlipInfo one, FlipInfo two) => !one.Equals(two);
+        public override int GetHashCode() => Squares.Aggregate((int) Direction, (p, n) => unchecked(37 * p + n.Index));
     }
 }

@@ -14,7 +14,15 @@ MonoBehaviour:
   id: FlippingSquares
   title: Flipping Squares
   author: JakkOfKlubs & Timwi
-  description: Flipping Squares
+  description: 'With every added move, the search space just... blows up.
+
+
+    Module created by Timwi & JakkOfKlubs.
+
+
+    [url=http://ktane.timwi.de/HTML/Flipping%20Squares.html]Manual HTML[/url]
+
+    [url=http://ktane.timwi.de/PDF/Flipping%20Squares.pdf]Manual PDF[/url]'
   version: 1.0
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: bd5c1f4881f57d54481b44e4c8a7779a, type: 3}
+  previewImage: {fileID: 2800000, guid: e75b64ee961c3314697a8a859ae455d1, type: 3}

@@ -42,7 +42,7 @@ namespace FlippingSquares
         {
             var arr = new (int[] arrs, int[] colors)[] { (TopArrows, TopColors), (BottomArrows, BottomColors) };
             const string arrows = "·•↑↗→↘↓↙←↖";
-            const string colors = "ROYGHCBPI";
+            const string colors = "ROYGCZBPI";
             return Enumerable.Range(0, 3).Select(row => arr.Select(tup => Enumerable.Range(0, 3).Select(col => $"{colors[tup.colors[col + 3 * row]]}{arrows[tup.arrs[col + 3 * row] + 2]}").JoinString(" ")).JoinString("    ")).JoinString("\n");
         }
 

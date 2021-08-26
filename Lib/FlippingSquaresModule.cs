@@ -41,6 +41,36 @@ public class FlippingSquaresModule : MonoBehaviour
     private readonly Queue<IEnumerator> _animationQueue = new Queue<IEnumerator>();
     private float? _timeSquarePressed = null;
 
+    private static readonly (int[] arrows, string snChars)[] _arrowConfigs = new (int[] arrows, string snChars)[] {
+        (new[] { 0, 1, 2, 7, -1, 3, 6, 5, 4 }, "0O"),
+        (new[] { 1, 2, 3, 0, -1, 4, 7, 6, 5 }, "1I"),
+        (new[] { 2, 3, 4, 1, -1, 5, 0, 7, 6 }, "2G"),
+        (new[] { 3, 4, 5, 2, -1, 6, 1, 0, 7 }, "3H"),
+        (new[] { 4, 5, 6, 3, -1, 7, 2, 1, 0 }, "4JW"),
+        (new[] { 5, 6, 7, 4, -1, 0, 3, 2, 1 }, "5K"),
+        (new[] { 6, 7, 0, 5, -1, 1, 4, 3, 2 }, "6L"),
+        (new[] { 7, 0, 1, 6, -1, 2, 5, 4, 3 }, "7M"),
+        (new[] { 7, 6, 5, 0, -1, 4, 1, 2, 3 }, "8N"),
+        (new[] { 0, 7, 6, 1, -1, 5, 2, 3, 4 }, "9PX"),
+        (new[] { 1, 0, 7, 2, -1, 6, 3, 4, 5 }, "AQ"),
+        (new[] { 2, 1, 0, 3, -1, 7, 4, 5, 6 }, "BRY"),
+        (new[] { 3, 2, 1, 4, -1, 0, 5, 6, 7 }, "CS"),
+        (new[] { 4, 3, 2, 5, -1, 1, 6, 7, 0 }, "DT"),
+        (new[] { 5, 4, 3, 6, -1, 2, 7, 0, 1 }, "EU"),
+        (new[] { 6, 5, 4, 7, -1, 3, 0, 1, 2 }, "FVZ")
+    };
+
+    private static readonly (int[] colors, string snChars)[] _colorConfigs = new (int[] colors, string snChars)[] {
+        (new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }, "08"),
+        (new[] { 6, 3, 0, 7, 4, 1, 8, 5, 2 }, "19"),
+        (new[] { 8, 7, 6, 5, 4, 3, 2, 1, 0 }, "2"),
+        (new[] { 2, 5, 8, 1, 4, 7, 0, 3, 6 }, "3"),
+        (new[] { 2, 1, 0, 5, 4, 3, 8, 7, 6 }, "4"),
+        (new[] { 0, 3, 6, 1, 4, 7, 2, 5, 8 }, "5"),
+        (new[] { 6, 7, 8, 3, 4, 5, 0, 1, 2 }, "6"),
+        (new[] { 8, 5, 2, 7, 4, 1, 6, 3, 0 }, "7")
+    };
+
     void Start()
     {
         _moduleId = _moduleIdCounter++;
@@ -54,40 +84,14 @@ public class FlippingSquaresModule : MonoBehaviour
             var flipIx = eligibleFlips[Rnd.Range(0, eligibleFlips.Length)];
             _buttonFlips[sq] = availableFlips[flipIx];
             availableFlips.RemoveAt(flipIx);
-            SquareSelectables[sq].OnInteract += SquarePress(sq);
+            SquareSelectables[sq].OnInteract += SquarePress;
             SquareSelectables[sq].OnInteractEnded += SquareRelease(sq);
         }
 
-        IEnumerable<JObject> edgework(string key) => Bomb.QueryWidgets(key, null).Where(str => str != null).Select(str => JObject.Parse(str));
-
-        // Determine the orientations of the top-face arrows from the serial number and indicators
-        var serialNumber = edgework(KMBombInfo.QUERYKEY_GET_SERIAL_NUMBER).First()["serial"].ToString();
-        var initialArrowsTop = serialNumber.Select(ch => (ch >= '0' && ch <= '9' ? ch - '0' : ch - 'A' + 1) % 8).Concat(new int[] { 0, 0 }).ToList();
-        for (var i = 0; i < 8; i++)
-            while (initialArrowsTop.Take(i).Contains(initialArrowsTop[i]))
-                initialArrowsTop[i] = (initialArrowsTop[i] + 1) % 8;
-
-        var indicators = edgework(KMBombInfo.QUERYKEY_GET_INDICATOR).Select(obj => (label: (string) obj["label"], lit: (string) obj["on"] == "True")).ToArray();
-        if (indicators.Count(ind => ind.lit) > indicators.Count(ind => !ind.lit))
-            (initialArrowsTop[6], initialArrowsTop[7]) = (initialArrowsTop[7], initialArrowsTop[6]);
-        initialArrowsTop.Insert(4, -1); // status light
-
-        // Determine the goal colors from the serial number and batteries
-        var initialColorsTop = serialNumber.Reverse().Select(ch => (ch >= '0' && ch <= '9' ? ch - '0' : ch - 'A' + 1) % 9).Concat(new int[] { 0, 0, 0 }).ToArray();
-        for (var i = 0; i < 9; i++)
-            while (initialColorsTop.Take(i).Contains(initialColorsTop[i]))
-                initialColorsTop[i] = (initialColorsTop[i] + 1) % 9;
-
-        var batteries = edgework(KMBombInfo.QUERYKEY_GET_BATTERIES).Sum(obj => (int) obj["numbatteries"]);
-        (initialColorsTop[6], initialColorsTop[7], initialColorsTop[8]) = batteries switch
-        {
-            0 => (initialColorsTop[6], initialColorsTop[7], initialColorsTop[8]),
-            1 => (initialColorsTop[6], initialColorsTop[8], initialColorsTop[7]),
-            2 => (initialColorsTop[7], initialColorsTop[6], initialColorsTop[8]),
-            3 => (initialColorsTop[8], initialColorsTop[6], initialColorsTop[7]),
-            4 => (initialColorsTop[7], initialColorsTop[8], initialColorsTop[6]),
-            _ => (initialColorsTop[8], initialColorsTop[7], initialColorsTop[6])
-        };
+        // Determine the goal arrows and colors from the serial number
+        var serialNumber = Bomb.QueryWidgets(KMBombInfo.QUERYKEY_GET_SERIAL_NUMBER, null).Where(str => str != null).Select(str => JObject.Parse(str)).First()["serial"].ToString();
+        var initialArrowsTop = _arrowConfigs.First(tup => tup.snChars.Contains(serialNumber[0])).arrows.Select(ar => ar < 0 ? ar : (ar + 7) % 8).ToArray();
+        var initialColorsTop = _colorConfigs.First(tup => tup.snChars.Contains(serialNumber[5])).colors;
 
         // Determine bottom colors at random
         var initialColorsBottom = Enumerable.Range(0, 9).ToArray().Shuffle();
@@ -112,27 +116,18 @@ public class FlippingSquaresModule : MonoBehaviour
             }
         }
 
-        var iterations = 0;
-        tryAgain:
-        if (iterations > 100)
-            throw new InvalidOperationException();
-        iterations++;
-
-        _solutionFlipIxs = Enumerable.Range(0, 5).Select(i => Rnd.Range(0, 9)).ToArray();
-        for (var i = 0; i < _solutionFlipIxs.Length; i++)
-            for (var j = i + 1; j < _solutionFlipIxs.Length; j++)
-                if (_solutionFlipIxs[j].Equals(_solutionFlipIxs[i]) && Enumerable.Range(i, j - i - 1).All(ix => !_buttonFlips[_solutionFlipIxs[ix]].AnyIntersection(_buttonFlips[_solutionFlipIxs[i]])))
-                    goto tryAgain;
-
-        _solutionState = new GameState(initialArrowsTop.ToArray(), initialColorsTop, initialArrowsBottom, initialColorsBottom);
-
-        Debug.Log($"[Flipping Squares #{_moduleId}] Intended solution:\n{_solutionState}");
-        //Debug.Log($"[Flipping Squares #{_moduleId}] Possible sequence: {_solutionFlipIxs.JoinString(", ")}");
+        _solutionState = new GameState(initialArrowsTop, initialColorsTop, initialArrowsBottom, initialColorsBottom);
+        _solutionFlipIxs = Enumerable.Range(0, 9).ToArray().Shuffle().Take(4).ToArray();
 
         _gameState = _solutionState;
         foreach (var flipIx in _solutionFlipIxs)
             _gameState = _gameState.PerformFlip(_buttonFlips[flipIx]);
         Array.Reverse(_solutionFlipIxs);
+
+        Debug.Log($"[Flipping Squares #{_moduleId}] Initial state:\n{_gameState}");
+        Debug.Log($"[Flipping Squares #{_moduleId}] Intended solution:\n{_solutionState}");
+        Debug.Log($"[Flipping Squares #{_moduleId}] Possible sequence: {_solutionFlipIxs.Select(sq => sq + 1).JoinString(", ")}");
+        Debug.Log($"[Flipping Squares #{_moduleId}] Flips:\n{_buttonFlips.JoinString("\n")}");
 
         UpdateVisuals(_gameState);
         StartCoroutine(AnimationQueue());
@@ -153,15 +148,12 @@ public class FlippingSquaresModule : MonoBehaviour
         }
     }
 
-    private KMSelectable.OnInteractHandler SquarePress(int sq)
+    private bool SquarePress()
     {
-        return delegate
-        {
-            if (_moduleSolved)
-                return false;
-            _timeSquarePressed = Time.time;
+        if (_moduleSolved)
             return false;
-        };
+        _timeSquarePressed = Time.time;
+        return false;
     }
 
     private Action SquareRelease(int sq)
@@ -171,10 +163,14 @@ public class FlippingSquaresModule : MonoBehaviour
             if (_moduleSolved)
                 return;
 
-            if (Time.time - _timeSquarePressed < 1)
+            if (Time.time - _timeSquarePressed < .3f)
             {
                 // short press: perform a flip
-                _performedFlips.Add(_buttonFlips[sq]);
+                if (_performedFlips.Count > 0 && _performedFlips[_performedFlips.Count - 1] == _buttonFlips[sq])
+                    _performedFlips.RemoveAt(_performedFlips.Count - 1);
+                else
+                    _performedFlips.Add(_buttonFlips[sq]);
+
                 _gameState = _gameState.PerformFlip(_buttonFlips[sq]);
                 if (_gameState.Equals(_solutionState))
                     _moduleSolved = true;
@@ -198,6 +194,7 @@ public class FlippingSquaresModule : MonoBehaviour
     {
         yield return null;
 
+        Audio.PlaySoundAtTransform("SquareTurn", SquareSelectables[flip.Squares[flip.Squares.Length / 2].Index].transform);
         OuterFlip.transform.localPosition = new Vector3(-.045f + .0225f * flip.Center.X, 0f, .045f - .0225f * flip.Center.Y);
         OuterFlip.transform.localEulerAngles = new Vector3(0f, 45 * (int) flip.Direction, 0f);
         InnerFlip.transform.localRotation = Quaternion.identity;
