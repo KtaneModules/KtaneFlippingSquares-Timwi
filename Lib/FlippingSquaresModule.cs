@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using FlippingSquares;
 using Newtonsoft.Json.Linq;
 using RT.Util.ExtensionMethods;
@@ -256,5 +257,67 @@ public class FlippingSquaresModule : MonoBehaviour
             setArrow(ArrowFronts[i], ButtonFronts[i].transform, state.TopArrows[i], false);
             setArrow(ArrowBacks[i], ButtonBacks[i].transform, state.BottomArrows[i], true);
         }
+    }
+
+#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} a1 c2 | !{0} 1 6 | !{0} reset";
+#pragma warning restore 414
+
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        if (Regex.IsMatch(command, @"^\s*reset\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            yield return SquareSelectables[0];
+            yield return new WaitForSeconds(.5f);
+            yield return SquareSelectables[0];
+            yield break;
+        }
+
+        var coords = command.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+        if (coords[0] == "press")
+            coords = coords.Skip(1).ToArray();
+        var btns = new List<KMSelectable>();
+        foreach (var coord in coords)
+        {
+            var m = Regex.Match(coord, @"^\s*([a-c])\s*([1-3])\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (m.Success)
+                btns.Add(SquareSelectables[m.Groups[1].Value.ToUpperInvariant()[0] - 'A' + 3 * (m.Groups[2].Value[0] - '1')]);
+            else
+            {
+                m = Regex.Match(coord, @"^\s*([1-9])\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                if (m.Success)
+                    btns.Add(SquareSelectables[m.Groups[1].Value[0] - '1']);
+                else
+                    yield break;
+            }
+        }
+        yield return null;
+        yield return btns;
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        if (_moduleSolved)
+            yield break;
+
+        if (_performedFlips.Count > 0)
+        {
+            SquareSelectables[0].OnInteract();
+            yield return new WaitForSeconds(.5f);
+            SquareSelectables[0].OnInteractEnded();
+            yield return new WaitForSeconds(.1f);
+        }
+
+        foreach (var flipIx in _solutionFlipIxs)
+        {
+            SquareSelectables[flipIx].OnInteract();
+            yield return new WaitForSeconds(.1f);
+            SquareSelectables[flipIx].OnInteractEnded();
+            yield return new WaitForSeconds(.1f);
+        }
+
+        while (!_moduleSolved)
+            yield return true;
     }
 }
